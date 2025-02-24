@@ -1,0 +1,11 @@
+.DS_Store
+.direnv/
+.envrc
+*egg-info/
+__pycache__/
+*.pyc
+*.db
+salt.txt
+*.log
+*.pid
+wpc.css
