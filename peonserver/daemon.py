@@ -7,7 +7,7 @@ import asyncio
 import typing
 
 LOOP = asyncio.get_event_loop()
-DEFAULT_LOG_PATH = '/tmp/wpcwebsite.dameon.log'
+DEFAULT_LOG_PATH = '/tmp/peonserver.dameon.log'
 
 """
 TODO:

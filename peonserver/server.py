@@ -7,14 +7,14 @@ import tornado.web
 from tornado.log import enable_pretty_logging
 import sass
 
-from wpcwebsite import app
-from wpcwebsite import db as database
-from wpcwebsite import daemon
-from wpcwebsite import logging
-from wpcwebsite import HERE
+from peonserver import app
+from peonserver import daemon
+from peonserver import HERE
+from peonserver import logging
+# from wpcwebsite import db as database
 
 PIDPATH = os.path.join(HERE, '..')
-PIDNAME = "wpcserver.pid"
+PIDNAME = "peonserver.pid"
 PID = os.path.join(PIDPATH, PIDNAME)
 STATIC_PATH = os.path.join(HERE, "static")
 
@@ -35,9 +35,9 @@ def make_app(**kwargs):
         "login_url": "/admin",
         "xsrf_cookies": True,
     }
-    tornado.autoreload.watch(os.path.join(settings['static_path'], 'css', 'wpc.css'))
-    tornado.autoreload.watch(os.path.join(settings['static_path'], 'sass', 'wpc.scss'))
-    tornado.autoreload.watch(os.path.join(settings['static_path'], 'js', 'wpc.js'))
+    # tornado.autoreload.watch(os.path.join(settings['static_path'], 'css', 'wpc.css'))
+    # tornado.autoreload.watch(os.path.join(settings['static_path'], 'sass', 'wpc.scss'))
+    # tornado.autoreload.watch(os.path.join(settings['static_path'], 'js', 'wpc.js'))
     tornado.autoreload.watch(os.path.join(settings['static_path'], 'index.html'))
     # compile sass
     compile_sass_files(settings['static_path'])
@@ -47,25 +47,11 @@ def make_app(**kwargs):
     return tornado.web.Application([
             # Tab names/router for website
             (r"/", app.MainHandler),
-            (r"/home", app.MainHandler),
-            (r"/shop", app.MainHandler),
-            (r"/freebies", app.MainHandler),
-            (r"/podcast", app.MainHandler),
-            (r"/blog", app.MainHandler),
-            # Other web routes
-            (r"/logout", app.LogoutHandler),
-            (r"/admin", app.AdminLoginHandler),
-            (r"/admindashboard", app.AdminHandler),
+            #
+            # (r"/logout", app.LogoutHandler),
+            # (r"/admin", app.AdminLoginHandler),
+            # (r"/admindashboard", app.AdminHandler),
             # API routes
-            (r"/newsletter", app.NewsletterHandler),
-            (r"/unsubscribe", app.NewsletterUnsubscribeHandler),
-            (r"/unsubscribe/(.*)", app.UnsubscribeParamHandler),
-            # Redirects
-            (r"/community", app.CommunityHandler),
-            (r"/insider", app.InsiderHandler),
-            (r"/talktome", app.TalkToMeHandler),
-            # (r"/unsubscribe/(\w+)", app.NewsletterUnsubscribeHandler),
-            # Static
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": settings['static_path']}),
         ],
         debug=kwargs.get("debug", False),
@@ -76,13 +62,9 @@ def make_app(**kwargs):
 class WPCDaemon(daemon.Daemon):
 
     async def run(self):
-        #logging.set_logger(debug=True, logfile=logfile)
-        #logging.LOG.info("Running WPC Server")
-        #print(logfile)
-        #print(os.path.exists(logfile))
-        self.log.info("Running the WPC Daemon")
-        await database.initialize_database()
-        logging.LOG.info("Initialized DBs.")
+        self.log.info("Running PeonServer")
+        # await database.initialize_database()
+        # logging.LOG.info("Initialized DBs.")
         try:
             app = make_app(debug=self.debug)
             logging.LOG.info(f"App created, debug mode {self.debug}")
@@ -92,8 +74,8 @@ class WPCDaemon(daemon.Daemon):
             logging.LOG.error(str(E))
 
 async def run_tornado(debug=True, port=8085):
-    await database.initialize_database()
-    logging.LOG.info("Initialized DBs.")
+    # await database.initialize_database()
+    # logging.LOG.info("Initialized DBs.")
     try:
         app = make_app(debug=debug)
         logging.LOG.info(f"App created, debug mode {debug}")
@@ -108,7 +90,7 @@ def main():
 
     Basically you run wpcserver command to start, then again to stop.
     """
-    parser = argparse.ArgumentParser(prog="wpcserver", description="Entry point into running wpcwebsite")
+    parser = argparse.ArgumentParser(prog="peonserver", description="PeonServer webserver host")
     parser.add_argument("--port", default=8085, help="Port to run on")
     parser.add_argument("--logfile", default=os.path.join(HERE, '..', f"{__name__}.log"),
                         help="Log file to write to")

@@ -3,7 +3,7 @@ from formencode import validators, Schema, api
 import functools
 
 
-__all__ = ["HERE", "Validator", "NewsletterValidator", "EmailValidator"]
+__all__ = ["HERE", "Validator", "EmailValidator"]
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -40,11 +40,5 @@ class EmailValidator(Schema):
     allow_extra_fields = True
 
     email = validators.Email(not_empty=True, min=5, max=256, strip=True)
-
-class NewsletterValidator(EmailValidator):
-    allow_extra_fields = True
-    filter_extra_fields = True
-
-    name  = validators.UnicodeString(min=2, max=256, not_empty=True, strip=True)
 
 

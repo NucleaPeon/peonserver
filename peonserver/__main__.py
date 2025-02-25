@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import wpcwebsite
-import wpcwebsite.server
+import peonserver
+import peonserver.server
 
 if __name__ == "__main__":
-    wpcwebsite.server.main()
+    peonserver.server.main()
