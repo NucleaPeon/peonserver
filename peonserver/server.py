@@ -29,20 +29,24 @@ def compile_sass_files(static_path=STATIC_PATH):
 
 def make_app(**kwargs):
     enable_pretty_logging()
+    autoreload = kwargs.get("autoreload", kwargs.get("debug", False) )
     settings = {
         "static_path": STATIC_PATH,
         "cookie_secret": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
         "login_url": "/admin",
         "xsrf_cookies": True,
     }
-    # tornado.autoreload.watch(os.path.join(settings['static_path'], 'css', 'wpc.css'))
-    # tornado.autoreload.watch(os.path.join(settings['static_path'], 'sass', 'wpc.scss'))
-    # tornado.autoreload.watch(os.path.join(settings['static_path'], 'js', 'wpc.js'))
-    tornado.autoreload.watch(os.path.join(settings['static_path'], 'index.html'))
+    if autoreload:
+        for _dir in [os.path.join(settings['static_path'], 'scss'), os.path.join(settings['static_path'], 'js'),
+                     os.path.join(settings['static_path'], 'css')]:
+            files = os.listdir(_dir)
+            for f in files:
+                logging.LOG.info(f"Watching file {f}")
+                tornado.autoreload.watch(os.path.join(settings['static_path'], _dir, f))
+
+        tornado.autoreload.watch(os.path.join(settings['static_path'], 'index.html'))
     # compile sass
     compile_sass_files(settings['static_path'])
-
-    logging.LOG.info("Autoreloading is set to {}".format(kwargs.get("autoreload", kwargs.get("debug", False) )))
 
     return tornado.web.Application([
             # Tab names/router for website
@@ -55,11 +59,11 @@ def make_app(**kwargs):
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": settings['static_path']}),
         ],
         debug=kwargs.get("debug", False),
-        autoreload=kwargs.get("autoreload", kwargs.get("debug", False) ),
+        autoreload=autoreload,
         **settings
     )
 
-class WPCDaemon(daemon.Daemon):
+class ServerDaemon(daemon.Daemon):
 
     async def run(self):
         self.log.info("Running PeonServer")
@@ -112,7 +116,7 @@ def main():
     if args.no_daemon:
         asyncio.run(run_tornado())
     else:
-        daemon = WPCDaemon(
+        daemon = ServerDaemon(
             pidname=args.pid_name, pidpath=args.pid_path, silent=args.silent, logfile=args.logfile, port=args.port, debug=args.debug)
 
         if args.action == "start":
