@@ -31,7 +31,7 @@ def make_app(**kwargs):
     enable_pretty_logging()
     settings = {
         "static_path": STATIC_PATH,
-        "cookie_secret": "1be9381b9b12698d307a84684b275225908667ed4cff4d2ccfc19bbf9ed7a2744afcff185397b03a4b2467cc7d2e3fb87fec0b9b412a5fc1bc6ff7d45f9c3200",
+        "cookie_secret": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
         "login_url": "/admin",
         "xsrf_cookies": True,
     }
