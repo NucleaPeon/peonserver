@@ -8,4 +8,4 @@ __pycache__/
 salt.txt
 *.log
 *.pid
-wpc.css
+cookie.secret

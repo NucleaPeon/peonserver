@@ -112,7 +112,7 @@ def main():
     parser.add_argument("--pid-path", default=PIDPATH, help="Directory for pid files")
     parser.add_argument("--pid-name", default=PIDNAME, help="Name of the server pid file")
     parser.add_argument("--silent", default=False, help="Daemon should be silent")
-    parser.add_argument("--debug", action="store_true", default=False, help="Enable debugging logs")
+    parser.add_argument("--debug", action="store_true", default=False, help="Enable debugging logs and autoreloading")
     parser.add_argument("--no-daemon", default=False, action="store_true",
                         help="Use the tornado event loop for running the website (useful for debugging)")
     subparsers = parser.add_subparsers(help="daemon actions", dest="action")
