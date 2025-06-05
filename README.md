@@ -41,6 +41,23 @@ cd peonserver
 pip install -r requirements.txt -e .
 ```
 
+### Post Installation
+
+Since we utilize files that contain keys and secrets, this is something that no one wants to accidentally commit to their repo.
+I want the file to exist when people check out the repo, but not allow changes to be committed.
+
+  - `.gitignore` will track changes if file is added even if it's ignored after
+  - `git update-index --skip-worktree <filepath>` is useful but requires users to run it and if there are changes to upstream, users may overlook updates to the README file.
+  - Lastly, there are git hooks but these cannot be committed to a repo.
+
+Sufficed to say, I am going with the git hook route, but with a twist. It does require you to manually run this command after checkout:
+
+```
+git config --local core.hooksPath githooks/
+```
+
+For every additional ignore file, a simple ``git pull`` will automatically include changes and prevent sensitive data being committed.
+
 
 Usage
 -----
