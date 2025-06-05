@@ -58,9 +58,21 @@ def get_cookie_key(cookiefile=os.path.join(HERE, "cookie.secret"), keylength=80)
 def find_website(path=os.path.join(HERE, "..", "website")):
     websitekw = {}
     if not os.path.exists(path):
-        logging.WARN(f"Expected user content website path {path} does not exist")
+        logging.LOG.warn(f"Expected user content website path {path} does not exist")
         return websitekw
 
+    logging.LOG.info("Found user website, adding to path.")
+    sys.path.insert(0, path)
+    try:
+        import website.globals
+        logging.LOG.info(f"Found website <{website.globals.WEBSITE}>")
+        websitekw['WATCH_PATHS'] = website.globals.WATCH_PATHS
+    except ImportError as iE:
+        logging.LOG.error(str(E))
+        logging.LOG.error(traceback.format_exc())
+    except AttributeError as aE:
+        logging.LOG.error(str(E))
+        logging.LOG.error("Missing 'WEBSITE' attribute in globals.py")
 
 
     return websitekw
@@ -81,7 +93,7 @@ def make_app(**kwargs):
 
     userwebsite = find_website()
 
-    COMMON_WATCH_PATHS.extend(userwebsite.get("watch_paths", []))
+    COMMON_WATCH_PATHS.extend(userwebsite.get("WATCH_PATHS", []))
 
     if autoreload:
         for _dir in COMMON_WATCH_PATHS:
@@ -152,19 +164,20 @@ def main():
     args = parser.parse_args()
     enable_pretty_logging()
     if args.no_daemon:
+        logging.set_logger(name=NAME)
         logging.LOG.info(f"Setting logfile to use stdout")
-        logging.set_logger()
         asyncio.run(run_tornado())
     else:
         if args.logfile:
+            logging.set_logger(args.logfile, name=NAME)
             logging.LOG.info(f"Setting logfile to {args.logfile}")
-            logging.set_logger(args.logfile)
         else:
+            logging.set_logger(name=NAME)
             logging.LOG.info(f"Setting logfile to use stdout")
-            logging.set_logger()
         daemon = ServerDaemon(
             pidname=args.pid_name, pidpath=args.pid_path, silent=args.silent,
             logfile=args.logfile, port=args.port, debug=args.debug)
+
 
         if args.action == "start":
             asyncio.run(daemon.start())
