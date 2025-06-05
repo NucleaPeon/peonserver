@@ -18,7 +18,7 @@ LOG = logging.LOG
 class MainHandler(tornado.web.RequestHandler):
 
     async def get(self):
-        self.render(os.path.join(HERE, "static/index.html"))
+        self.render(os.path.join(self.settings.get("static_path"), "index.html"))
         # self.static_url("index.html")
 
 

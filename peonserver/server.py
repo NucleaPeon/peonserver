@@ -66,11 +66,12 @@ def find_website(path=os.path.join(HERE, "..", "website")):
     sys.path.insert(0, path)
     try:
         import website.globals
+        #LEFT OFF FIXME: If attrs not found, ignore but warn unless critical
         plog.LOG.info(f"Found website <{website.globals.WEBSITE}>")
         websitekw['WATCH_PATHS'] = website.globals.WATCH_PATHS
         plog.LOG.debug(f"\t:: WATCH_PATHS found")
         websitekw['STATIC_PATH'] = website.globals.STATIC_PATH
-        plog.LOG.debug(f"\t:: STATIC_PATH found")
+        plog.LOG.debug(f"\t:: STATIC_PATH found {websitekw['STATIC_PATH']}")
     except ImportError as iE:
         plog.LOG.error(str(iE))
         plog.LOG.error(traceback.format_exc())
@@ -85,11 +86,12 @@ def make_app(**kwargs):
     plog.LOG.setLevel(logging.DEBUG if kwargs.get("debug") else logging.INFO)
     userwebsite = find_website()
     settings = {
-        "static_path": userwebsite.get("STATIC_PATH", STATIC_PATH),
+        "static_path": userwebsite.get("STATIC_PATH") or STATIC_PATH,
         "cookie_secret": get_cookie_key(),
         "login_url": "/admin",
         "xsrf_cookies": True,
     }
+    print(settings)
     if autoreload:
         for _dir in COMMON_WATCH_PATHS:
             plog.LOG.debug(f"Watching in directory path {_dir}")
