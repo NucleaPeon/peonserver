@@ -5,6 +5,7 @@ import random
 import string
 import asyncio
 import importlib
+import logging
 import traceback
 import tornado
 import tornado.web
@@ -14,7 +15,7 @@ import sass
 from peonserver import app
 from peonserver import daemon
 from peonserver import HERE
-from peonserver import logging
+import peonserver.logging as plog
 
 NAME = "PeonServer"
 
@@ -33,24 +34,24 @@ def compile_sass_files(static_path=STATIC_PATH):
     if os.path.exists(sassdir):
         files = os.listdir(sassdir)
         for f in files:
-            logging.LOG.info(f"Compiling scss file {f}")
+            plog.LOG.info(f"Compiling scss file {f}")
             if f.endswith(".scss"):
                 sass.compile(dirname=(sassdir, os.path.join(static_path, "css")))
 
 def get_cookie_key(cookiefile=os.path.join(HERE, "cookie.secret"), keylength=80):
     cookiekey = ""
     if not os.path.exists(cookiefile):
-        logging.LOG.warn(f"Cookie secret file not found at {cookiefile}")
-        logging.LOG.warn(f"Create {cookiefile} and add in key to ignore this warning")
+        plog.LOG.warn(f"Cookie secret file not found at {cookiefile}")
+        plog.LOG.warn(f"Create {cookiefile} and add in key to ignore this warning")
 
     else:
         with open(cookiefile, 'r') as cf:
             cookiekey = cf.read()
             if not cookiekey:
-                logging.LOG.warn("Cookie secret file is empty")
+                plog.LOG.warn("Cookie secret file is empty")
 
         if not cookiekey:
-            logging.LOG.warn("Cookie secret key is empty, generating a random string instead")
+            plog.LOG.warn("Cookie secret key is empty, generating a random string instead")
             cookiekey = ''.join(random.choices(string.ascii_letters + string.digits, k=keylength))
 
     return cookiekey
@@ -58,61 +59,61 @@ def get_cookie_key(cookiefile=os.path.join(HERE, "cookie.secret"), keylength=80)
 def find_website(path=os.path.join(HERE, "..", "website")):
     websitekw = {}
     if not os.path.exists(path):
-        logging.LOG.warn(f"Expected user content website path {path} does not exist")
+        plog.LOG.warn(f"Expected user content website path {path} does not exist")
         return websitekw
 
-    logging.LOG.info("Found user website, adding to path.")
+    plog.LOG.info("Found user website, adding to path.")
     sys.path.insert(0, path)
     try:
         import website.globals
-        logging.LOG.info(f"Found website <{website.globals.WEBSITE}>")
+        plog.LOG.info(f"Found website <{website.globals.WEBSITE}>")
         websitekw['WATCH_PATHS'] = website.globals.WATCH_PATHS
+        plog.LOG.debug(f"\t:: WATCH_PATHS found")
+        websitekw['STATIC_PATH'] = website.globals.STATIC_PATH
+        plog.LOG.debug(f"\t:: STATIC_PATH found")
     except ImportError as iE:
-        logging.LOG.error(str(E))
-        logging.LOG.error(traceback.format_exc())
+        plog.LOG.error(str(iE))
+        plog.LOG.error(traceback.format_exc())
     except AttributeError as aE:
-        logging.LOG.error(str(E))
-        logging.LOG.error("Missing 'WEBSITE' attribute in globals.py")
+        plog.LOG.error(str(aE))
 
 
     return websitekw
 
 def make_app(**kwargs):
     autoreload = kwargs.get("autoreload", kwargs.get("debug", False) )
+    plog.LOG.setLevel(logging.DEBUG if kwargs.get("debug") else logging.INFO)
+    userwebsite = find_website()
     settings = {
-        "static_path": STATIC_PATH,
+        "static_path": userwebsite.get("STATIC_PATH", STATIC_PATH),
         "cookie_secret": get_cookie_key(),
         "login_url": "/admin",
         "xsrf_cookies": True,
     }
+    if autoreload:
+        for _dir in COMMON_WATCH_PATHS:
+            plog.LOG.debug(f"Watching in directory path {_dir}")
+            files = os.listdir(_dir)
+            for f in files:
+                if f.startswith("."):
+                    continue
+                plog.LOG.info(f"Watching file {f}")
+                tornado.autoreload.watch(os.path.join(settings['static_path'], _dir, f))
+
+        tornado.autoreload.watch(os.path.join(settings['static_path'], 'index.html'))
+
     COMMON_WATCH_PATHS.extend([
         os.path.join(settings['static_path'], 'scss'),
         os.path.join(settings['static_path'], 'js'),
         os.path.join(settings['static_path'], 'css')
     ])
-
-    userwebsite = find_website()
-
     COMMON_WATCH_PATHS.extend(userwebsite.get("WATCH_PATHS", []))
 
-    if autoreload:
-        for _dir in COMMON_WATCH_PATHS:
-            logging.LOG.debug(f"Watching in directory path {_dir}")
-            files = os.listdir(_dir)
-            for f in files:
-                if f.startswith("."):
-                    continue
-                logging.LOG.info(f"Watching file {f}")
-                tornado.autoreload.watch(os.path.join(settings['static_path'], _dir, f))
-
-        tornado.autoreload.watch(os.path.join(settings['static_path'], 'index.html'))
     # compile sass
     compile_sass_files(settings['static_path'])
 
     return tornado.web.Application([
-            # Tab names/router for website
             (r"/", app.MainHandler),
-            #
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": settings['static_path']}),
         ],
         debug=kwargs.get("debug", False),
@@ -126,22 +127,22 @@ class ServerDaemon(daemon.Daemon):
         self.log.info(f"Running {NAME}")
         try:
             app = make_app(debug=self.debug)
-            logging.LOG.info(f"App created, debug mode {self.debug}")
+            plog.LOG.info(f"App created, debug mode {self.debug}")
             app.listen(self.port)
             asyncio.run(await asyncio.Event().wait())
         except Exception as E:
-            logging.LOG.error(str(E))
-            logging.LOG.error(traceback.format_exc())
+            plog.LOG.error(str(E))
+            plog.LOG.error(traceback.format_exc())
 
 async def run_tornado(debug=True, port=8085):
     try:
         app = make_app(debug=debug)
-        logging.LOG.info(f"App created, debug mode {'enabled' if debug else 'disabled'}")
+        plog.LOG.info(f"App created, debug mode {'enabled' if debug else 'disabled'}")
         app.listen(port)
         asyncio.run(await asyncio.Event().wait())
     except Exception as E:
-        logging.LOG.error(str(E))
-        logging.LOG.error(traceback.format_exc())
+        plog.LOG.error(str(E))
+        plog.LOG.error(traceback.format_exc())
 
 def main():
     parser = argparse.ArgumentParser(prog=f"{NAME.lower()}", description=f"{NAME} webserver host")
@@ -164,16 +165,16 @@ def main():
     args = parser.parse_args()
     enable_pretty_logging()
     if args.no_daemon:
-        logging.set_logger(name=NAME)
-        logging.LOG.info(f"Setting logfile to use stdout")
+        plog.set_logger(name=NAME)
+        plog.LOG.info(f"Setting logfile to use stdout")
         asyncio.run(run_tornado())
     else:
         if args.logfile:
-            logging.set_logger(args.logfile, name=NAME)
-            logging.LOG.info(f"Setting logfile to {args.logfile}")
+            plog.set_logger(args.logfile, name=NAME)
+            plog.LOG.info(f"Setting logfile to {args.logfile}")
         else:
-            logging.set_logger(name=NAME)
-            logging.LOG.info(f"Setting logfile to use stdout")
+            plog.set_logger(name=NAME)
+            plog.LOG.info(f"Setting logfile to use stdout")
         daemon = ServerDaemon(
             pidname=args.pid_name, pidpath=args.pid_path, silent=args.silent,
             logfile=args.logfile, port=args.port, debug=args.debug)

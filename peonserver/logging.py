@@ -14,7 +14,6 @@ def set_logger(logfile=None, level=logging.DEBUG, name="peonserver") -> None:
                             datefmt='%H:%M:%S'
         )
         LOG = logging.getLogger(f'{name} ')
-        LOG.setLevel(level)
 
     else:
         handler = logging.handlers.RotatingFileHandler(
@@ -26,7 +25,7 @@ def set_logger(logfile=None, level=logging.DEBUG, name="peonserver") -> None:
         handler.setFormatter(formatter)
         LOG = logging.getLogger(f'{name} ')
         LOG.addHandler(handler)
-        LOG.setLevel(level)
 
+    LOG.setLevel(level)
 
 
