@@ -28,12 +28,29 @@ def compile_sass_files(static_path=STATIC_PATH):
             if f.endswith(".scss"):
                 sass.compile(dirname=(sassdir, os.path.join(static_path, "css")))
 
+def get_cookie_key(cookiefile=os.path.join(HERE, "cookie.secret")):
+    cookiekey = ""
+    if not os.path.exists(cookiefile):
+        logging.LOG.warn("Cookie secret file not found, create 'cookie.secret' and add in your secret key")
+
+    with open(cookiefile, 'r') as cf:
+        cookiekey = cf.read()
+        if not cookiekey:
+            logging.LOG.warn("Cookie secret file is empty")
+
+    if not cookiekey:
+        logging.LOG.warn("Cookie secret key is empty, generating a random string instead")
+        cookiekey = ''.join(random.choices(string.ascii_letters + string.digits, k=80))
+
+    return cookiekey
+
+
 def make_app(**kwargs):
     enable_pretty_logging()
     autoreload = kwargs.get("autoreload", kwargs.get("debug", False) )
     settings = {
         "static_path": STATIC_PATH,
-        "cookie_secret": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
+        "cookie_secret": get_cookie_key(),
         "login_url": "/admin",
         "xsrf_cookies": True,
     }
