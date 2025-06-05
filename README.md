@@ -86,12 +86,13 @@ python -m peonserver status
 
 ``--debug`` will increase verbosity and will autoreload when scss/sass/js/css files or the ``/static/index.html`` file is modified.
 
+
 Building Websites
 -----------------
 
 PeonServer is capable of developing webpages right off the bat, but it also allows developers to isolate their web code from the server code.
 
-Run the script to create the website:
+Run the script after installation of peonserver to create the website:
 
 ``./create-website``
 
@@ -99,4 +100,6 @@ and then modify the underlying ``website/static/...`` contents in the same way y
 The ``website`` directory is under ``.gitignore`` so it's something you should manage yourself. Turn it into its own git repo and then push and pull website-only changes there.
 
 In this manner, it'll be easier to port to and from peonserver to other web servers, unless you utilize tornado-specific templating/static variable referencing within html code.
+
+NOTE: *Running ``create-website`` while peonserver is running with autoreload will detect and load your new website, but removing the ``website`` directory will NOT reload, so this must be done manually to get back to default settings. This is an unlikely use case, however.*
 

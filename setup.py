@@ -8,7 +8,8 @@ setup(
     entry_points={
         'console_scripts': [
             'pserver = peonserver.server:main',
-            'pdaemon = peonserver.daemon:main'
+            'pdaemon = peonserver.daemon:main',
+            'create-website = peonserver.scripts.create_website:main'
         ]
     }
 )

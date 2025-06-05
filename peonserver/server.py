@@ -59,7 +59,8 @@ def get_cookie_key(cookiefile=os.path.join(HERE, "cookie.secret"), keylength=80)
 def find_website(path=os.path.join(HERE, "..", "website")):
     websitekw = {}
     if not os.path.exists(path):
-        plog.LOG.warn(f"Expected user content website path {path} does not exist")
+        plog.LOG.info(f"Optional user content website path `{os.path.normpath(path)}` does not exist.")
+        plog.LOG.info("Use `create-website` script to generate a templated website structure")
         return websitekw
 
     plog.LOG.info("Found user website, adding to path.")
@@ -69,9 +70,11 @@ def find_website(path=os.path.join(HERE, "..", "website")):
         #LEFT OFF FIXME: If attrs not found, ignore but warn unless critical
         plog.LOG.info(f"Found website <{website.globals.WEBSITE}>")
         websitekw['WATCH_PATHS'] = website.globals.WATCH_PATHS
-        plog.LOG.debug(f"\t:: WATCH_PATHS found")
+        for wp in websitekw['WATCH_PATHS']:
+            plog.LOG.debug(f"\t\t: Found watch path {wp}")
         websitekw['STATIC_PATH'] = website.globals.STATIC_PATH
         plog.LOG.debug(f"\t:: STATIC_PATH found {websitekw['STATIC_PATH']}")
+        websitekw['WEBSITE'] = website.globals.WEBSITE
     except ImportError as iE:
         plog.LOG.error(str(iE))
         plog.LOG.error(traceback.format_exc())
@@ -90,8 +93,11 @@ def make_app(**kwargs):
         "cookie_secret": get_cookie_key(),
         "login_url": "/admin",
         "xsrf_cookies": True,
+        "WEBSITE": "Default PeonServer Webpage",
     }
-    print(settings)
+
+    settings.update(userwebsite)
+
     if autoreload:
         for _dir in COMMON_WATCH_PATHS:
             plog.LOG.debug(f"Watching in directory path {_dir}")
