@@ -1,6 +1,8 @@
 import os
 import sys
 import argparse
+import random
+import string
 import asyncio
 import tornado
 import tornado.web
@@ -28,20 +30,23 @@ def compile_sass_files(static_path=STATIC_PATH):
             if f.endswith(".scss"):
                 sass.compile(dirname=(sassdir, os.path.join(static_path, "css")))
 
-def get_cookie_key(cookiefile=os.path.join(HERE, "cookie.secret")):
+def get_cookie_key(cookiefile=os.path.join(HERE, "cookie.secret"), keylength=80):
     cookiekey = ""
     if not os.path.exists(cookiefile):
-        logging.LOG.warn("Cookie secret file not found, create 'cookie.secret' and add in your secret key")
+        logging.LOG.warn(f"Cookie secret file not found at {cookiefile}")
+        logging.LOG.warn(f"Create {cookiefile} and add in key to ignore this warning")
 
-    with open(cookiefile, 'r') as cf:
-        cookiekey = cf.read()
-        if not cookiekey:
-            logging.LOG.warn("Cookie secret file is empty")
+    else:
+        with open(cookiefile, 'r') as cf:
+            cookiekey = cf.read()
+            if not cookiekey:
+                logging.LOG.warn("Cookie secret file is empty")
 
     if not cookiekey:
         logging.LOG.warn("Cookie secret key is empty, generating a random string instead")
-        cookiekey = ''.join(random.choices(string.ascii_letters + string.digits, k=80))
+        cookiekey = ''.join(random.choices(string.ascii_letters + string.digits, k=keylength))
 
+    print(cookiekey)
     return cookiekey
 
 
