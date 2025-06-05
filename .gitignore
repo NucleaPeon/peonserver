@@ -9,3 +9,4 @@ salt.txt
 *.log
 *.pid
 *.secret
+peonserver/*.secret
