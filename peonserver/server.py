@@ -11,10 +11,11 @@ from peonserver import app
 from peonserver import daemon
 from peonserver import HERE
 from peonserver import logging
-# from wpcwebsite import db as database
+
+NAME = "PeonServer"
 
 PIDPATH = os.path.join(HERE, '..')
-PIDNAME = "peonserver.pid"
+PIDNAME = f"{NAME.lower()}.pid"
 PID = os.path.join(PIDPATH, PIDNAME)
 STATIC_PATH = os.path.join(HERE, "static")
 
@@ -41,6 +42,8 @@ def make_app(**kwargs):
                      os.path.join(settings['static_path'], 'css')]:
             files = os.listdir(_dir)
             for f in files:
+                if f.startswith("."):
+                    continue
                 logging.LOG.info(f"Watching file {f}")
                 tornado.autoreload.watch(os.path.join(settings['static_path'], _dir, f))
 
@@ -52,10 +55,6 @@ def make_app(**kwargs):
             # Tab names/router for website
             (r"/", app.MainHandler),
             #
-            # (r"/logout", app.LogoutHandler),
-            # (r"/admin", app.AdminLoginHandler),
-            # (r"/admindashboard", app.AdminHandler),
-            # API routes
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": settings['static_path']}),
         ],
         debug=kwargs.get("debug", False),
@@ -66,9 +65,7 @@ def make_app(**kwargs):
 class ServerDaemon(daemon.Daemon):
 
     async def run(self):
-        self.log.info("Running PeonServer")
-        # await database.initialize_database()
-        # logging.LOG.info("Initialized DBs.")
+        self.log.info(f"Running {NAME}")
         try:
             app = make_app(debug=self.debug)
             logging.LOG.info(f"App created, debug mode {self.debug}")
@@ -78,8 +75,6 @@ class ServerDaemon(daemon.Daemon):
             logging.LOG.error(str(E))
 
 async def run_tornado(debug=True, port=8085):
-    # await database.initialize_database()
-    # logging.LOG.info("Initialized DBs.")
     try:
         app = make_app(debug=debug)
         logging.LOG.info(f"App created, debug mode {debug}")
@@ -89,12 +84,7 @@ async def run_tornado(debug=True, port=8085):
         logging.LOG.error(str(E))
 
 def main():
-    """This main method will run the daemon to host the wpcwebsite if not running,
-    otherwise it will stop the running wpcwebsite.
-
-    Basically you run wpcserver command to start, then again to stop.
-    """
-    parser = argparse.ArgumentParser(prog="peonserver", description="PeonServer webserver host")
+    parser = argparse.ArgumentParser(prog=f"{NAME.lower()}", description=f"{NAME} webserver host")
     parser.add_argument("--port", default=8085, help="Port to run on")
     parser.add_argument("--logfile", default=os.path.join(HERE, '..', f"{__name__}.log"),
                         help="Log file to write to")
@@ -106,18 +96,18 @@ def main():
                         help="Use the tornado event loop for running the website (useful for debugging)")
     subparsers = parser.add_subparsers(help="daemon actions", dest="action")
     subparsers.required = False
-    parser_start = subparsers.add_parser('start', help="Start the wpcwebsite daemon")
-    parser_stop = subparsers.add_parser('stop', help="Stop the wpcwebsite daemon")
-    parser_restart = subparsers.add_parser('restart', help="Restart the wpcwebsite daemon")
-    parser_status = subparsers.add_parser('status', help="Print out server status")
+    parser_start = subparsers.add_parser('start', help=f"Start the {NAME.lower()} daemon")
+    parser_stop = subparsers.add_parser('stop', help=f"Stop the {NAME.lower()} daemon")
+    parser_restart = subparsers.add_parser('restart', help=f"Restart the {NAME.lower()} daemon")
+    parser_status = subparsers.add_parser('status', help=f"Print out {NAME.lower()} daemon status")
 
     args = parser.parse_args()
-    #logging.set_logger(logfile=args.logfile)
     if args.no_daemon:
         asyncio.run(run_tornado())
     else:
         daemon = ServerDaemon(
-            pidname=args.pid_name, pidpath=args.pid_path, silent=args.silent, logfile=args.logfile, port=args.port, debug=args.debug)
+            pidname=args.pid_name, pidpath=args.pid_path, silent=args.silent,
+            logfile=args.logfile, port=args.port, debug=args.debug)
 
         if args.action == "start":
             asyncio.run(daemon.start())
