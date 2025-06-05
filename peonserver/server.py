@@ -31,6 +31,9 @@ COMMON_WATCH_PATHS = [
 
 def compile_sass_files(static_path=STATIC_PATH):
     sassdir = os.path.join(static_path, 'sass')
+    if not os.path.exists(sassdir):
+        sassdir = os.path.join(static_path, 'scss')
+
     if os.path.exists(sassdir):
         files = os.listdir(sassdir)
         for f in files:
