@@ -42,11 +42,10 @@ def get_cookie_key(cookiefile=os.path.join(HERE, "cookie.secret"), keylength=80)
             if not cookiekey:
                 logging.LOG.warn("Cookie secret file is empty")
 
-    if not cookiekey:
-        logging.LOG.warn("Cookie secret key is empty, generating a random string instead")
-        cookiekey = ''.join(random.choices(string.ascii_letters + string.digits, k=keylength))
+        if not cookiekey:
+            logging.LOG.warn("Cookie secret key is empty, generating a random string instead")
+            cookiekey = ''.join(random.choices(string.ascii_letters + string.digits, k=keylength))
 
-    print(cookiekey)
     return cookiekey
 
 
