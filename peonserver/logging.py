@@ -1,7 +1,6 @@
 import time
 import logging
 import logging.handlers
-LOG = logging.getLogger('peonserver ')
 
 def set_logger(logfile=None, level=logging.DEBUG) -> None:
     if logfile is None:
@@ -25,3 +24,4 @@ def set_logger(logfile=None, level=logging.DEBUG) -> None:
         LOG.setLevel(level)
 
 
+LOG = logging.getLogger('peonserver ')

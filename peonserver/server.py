@@ -4,6 +4,8 @@ import argparse
 import random
 import string
 import asyncio
+import importlib
+import traceback
 import tornado
 import tornado.web
 from tornado.log import enable_pretty_logging
@@ -20,6 +22,11 @@ PIDPATH = os.path.join(HERE, '..')
 PIDNAME = f"{NAME.lower()}.pid"
 PID = os.path.join(PIDPATH, PIDNAME)
 STATIC_PATH = os.path.join(HERE, "static")
+
+COMMON_WATCH_PATHS = [
+
+]
+
 
 def compile_sass_files(static_path=STATIC_PATH):
     sassdir = os.path.join(static_path, 'sass')
@@ -48,9 +55,17 @@ def get_cookie_key(cookiefile=os.path.join(HERE, "cookie.secret"), keylength=80)
 
     return cookiekey
 
+def find_website(path=os.path.join(HERE, "..", "website")):
+    websitekw = {}
+    if not os.path.exists(path):
+        logging.WARN(f"Expected user content website path {path} does not exist")
+        return websitekw
+
+
+
+    return websitekw
 
 def make_app(**kwargs):
-    enable_pretty_logging()
     autoreload = kwargs.get("autoreload", kwargs.get("debug", False) )
     settings = {
         "static_path": STATIC_PATH,
@@ -58,9 +73,19 @@ def make_app(**kwargs):
         "login_url": "/admin",
         "xsrf_cookies": True,
     }
+    COMMON_WATCH_PATHS.extend([
+        os.path.join(settings['static_path'], 'scss'),
+        os.path.join(settings['static_path'], 'js'),
+        os.path.join(settings['static_path'], 'css')
+    ])
+
+    userwebsite = find_website()
+
+    COMMON_WATCH_PATHS.extend(userwebsite.get("watch_paths", []))
+
     if autoreload:
-        for _dir in [os.path.join(settings['static_path'], 'scss'), os.path.join(settings['static_path'], 'js'),
-                     os.path.join(settings['static_path'], 'css')]:
+        for _dir in COMMON_WATCH_PATHS:
+            logging.LOG.debug(f"Watching in directory path {_dir}")
             files = os.listdir(_dir)
             for f in files:
                 if f.startswith("."):
@@ -94,15 +119,17 @@ class ServerDaemon(daemon.Daemon):
             asyncio.run(await asyncio.Event().wait())
         except Exception as E:
             logging.LOG.error(str(E))
+            logging.LOG.error(traceback.format_exc())
 
 async def run_tornado(debug=True, port=8085):
     try:
         app = make_app(debug=debug)
-        logging.LOG.info(f"App created, debug mode {debug}")
+        logging.LOG.info(f"App created, debug mode {'enabled' if debug else 'disabled'}")
         app.listen(port)
         asyncio.run(await asyncio.Event().wait())
     except Exception as E:
         logging.LOG.error(str(E))
+        logging.LOG.error(traceback.format_exc())
 
 def main():
     parser = argparse.ArgumentParser(prog=f"{NAME.lower()}", description=f"{NAME} webserver host")
@@ -123,9 +150,18 @@ def main():
     parser_status = subparsers.add_parser('status', help=f"Print out {NAME.lower()} daemon status")
 
     args = parser.parse_args()
+    enable_pretty_logging()
     if args.no_daemon:
+        logging.LOG.info(f"Setting logfile to use stdout")
+        logging.set_logger()
         asyncio.run(run_tornado())
     else:
+        if args.logfile:
+            logging.LOG.info(f"Setting logfile to {args.logfile}")
+            logging.set_logger(args.logfile)
+        else:
+            logging.LOG.info(f"Setting logfile to use stdout")
+            logging.set_logger()
         daemon = ServerDaemon(
             pidname=args.pid_name, pidpath=args.pid_path, silent=args.silent,
             logfile=args.logfile, port=args.port, debug=args.debug)
