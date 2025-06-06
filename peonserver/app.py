@@ -11,9 +11,9 @@ from formencode import Invalid
 
 # tornado.web.authenticated
 from peonserver import *
-from peonserver import logging
+import peonserver.log as plog
 
-LOG = logging.LOG
+LOG = plog.LOG
 
 class MainHandler(tornado.web.RequestHandler):
 
@@ -37,6 +37,11 @@ class AuthenticatedHandler(tornado.web.RequestHandler):
             self.set_secure_cookie("user", tornado.escape.json_encode(user))
         else:
             self.clear_cookie("user")
+
+class TemplateTestHandler(tornado.web.RequestHandler):
+
+    async def get(self):
+        self.render("test.html", value1="one", value2="two")
 
 #
 # class AdminLoginHandler(AuthenticatedHandler):

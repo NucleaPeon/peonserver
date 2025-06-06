@@ -15,7 +15,7 @@ import sass
 from peonserver import app
 from peonserver import daemon
 from peonserver import HERE
-import peonserver.logging as plog
+import peonserver.log as plog
 
 NAME = "PeonServer"
 
@@ -73,9 +73,13 @@ def find_website(path=os.path.join(HERE, "..", "website")):
         import website.globals
         #LEFT OFF FIXME: If attrs not found, ignore but warn unless critical
         plog.LOG.info(f"Found website <{website.globals.WEBSITE}>")
-        websitekw['WATCH_PATHS'] = website.globals.WATCH_PATHS
-        for wp in websitekw['WATCH_PATHS']:
-            plog.LOG.debug(f"\t\t: Found watch path {wp}")
+        websitekw['WATCH_PATHS'] = []
+        for wp in website.globals.WATCH_PATHS:
+            found = os.path.exists(wp)
+            plog.LOG.debug(f"\t\t: {'Ignoring missing' if not found else 'Found'} watch path {wp}")
+            if found:
+                websitekw['WATCH_PATHS'].append(wp)
+
         websitekw['STATIC_PATH'] = website.globals.STATIC_PATH
         plog.LOG.debug(f"\t:: STATIC_PATH found {websitekw['STATIC_PATH']}")
         websitekw['WEBSITE'] = website.globals.WEBSITE
@@ -102,6 +106,7 @@ def make_app(**kwargs):
 
     settings.update(userwebsite)
     COMMON_WATCH_PATHS.extend([
+        os.path.join(settings['static_path'], 'index.html'),
         TMPL_PATH,
         os.path.join(settings['static_path'], 'scss'),
         os.path.join(settings['static_path'], 'js'),
@@ -110,7 +115,8 @@ def make_app(**kwargs):
     COMMON_WATCH_PATHS.extend(userwebsite.get("WATCH_PATHS", []))
 
     if autoreload:
-        for _dir in COMMON_WATCH_PATHS:
+        # Remove duplicates
+        for _dir in set(COMMON_WATCH_PATHS):
             plog.LOG.debug(f"Watching in directory path {_dir}")
 
             if not os.path.isfile(_dir):
@@ -125,15 +131,15 @@ def make_app(**kwargs):
                 plog.LOG.info(f"Watching file {f}")
                 tornado.autoreload.watch(os.path.join(settings['static_path'], _dir, f))
 
-        tornado.autoreload.watch(os.path.join(settings['static_path'], 'index.html'))
-
     # compile sass
     compile_sass_files(settings['static_path'])
 
     return tornado.web.Application([
             (r"/", app.MainHandler),
+            (r"/templ", app.TemplateTestHandler),
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": settings['static_path']}),
         ],
+        template_path=TMPL_PATH,
         debug=kwargs.get("debug", False),
         autoreload=autoreload,
         **settings
