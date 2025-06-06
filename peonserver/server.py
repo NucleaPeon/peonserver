@@ -83,12 +83,12 @@ def find_website(path=os.path.join(HERE, "..", "website")):
         websitekw['STATIC_PATH'] = website.globals.STATIC_PATH
         plog.LOG.debug(f"\t:: STATIC_PATH found {websitekw['STATIC_PATH']}")
         websitekw['WEBSITE'] = website.globals.WEBSITE
+        websitekw["TMPL_PATH"] = os.path.join(website.globals.HERE, "html")
     except ImportError as iE:
         plog.LOG.error(str(iE))
         plog.LOG.error(traceback.format_exc())
     except AttributeError as aE:
         plog.LOG.error(str(aE))
-
 
     return websitekw
 
@@ -139,7 +139,7 @@ def make_app(**kwargs):
             (r"/templ", app.TemplateTestHandler),
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": settings['static_path']}),
         ],
-        template_path=TMPL_PATH,
+        template_path=userwebsite.get("TMPL_PATH", TMPL_PATH),
         debug=kwargs.get("debug", False),
         autoreload=autoreload,
         **settings
