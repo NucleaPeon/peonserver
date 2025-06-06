@@ -100,11 +100,23 @@ def make_app(**kwargs):
     }
 
     settings.update(userwebsite)
+    COMMON_WATCH_PATHS.extend([
+        os.path.join(settings['static_path'], 'scss'),
+        os.path.join(settings['static_path'], 'js'),
+        os.path.join(settings['static_path'], 'css')
+    ])
+    COMMON_WATCH_PATHS.extend(userwebsite.get("WATCH_PATHS", []))
 
     if autoreload:
         for _dir in COMMON_WATCH_PATHS:
             plog.LOG.debug(f"Watching in directory path {_dir}")
-            files = os.listdir(_dir)
+
+            if not os.path.isfile(_dir):
+                files = os.listdir(_dir)
+
+            else:
+                files = [_dir]
+
             for f in files:
                 if f.startswith("."):
                     continue
@@ -112,13 +124,6 @@ def make_app(**kwargs):
                 tornado.autoreload.watch(os.path.join(settings['static_path'], _dir, f))
 
         tornado.autoreload.watch(os.path.join(settings['static_path'], 'index.html'))
-
-    COMMON_WATCH_PATHS.extend([
-        os.path.join(settings['static_path'], 'scss'),
-        os.path.join(settings['static_path'], 'js'),
-        os.path.join(settings['static_path'], 'css')
-    ])
-    COMMON_WATCH_PATHS.extend(userwebsite.get("WATCH_PATHS", []))
 
     # compile sass
     compile_sass_files(settings['static_path'])
