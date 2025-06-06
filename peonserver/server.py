@@ -23,6 +23,7 @@ PIDPATH = os.path.join(HERE, '..')
 PIDNAME = f"{NAME.lower()}.pid"
 PID = os.path.join(PIDPATH, PIDNAME)
 STATIC_PATH = os.path.join(HERE, "static")
+TMPL_PATH = os.path.join(HERE, "html")
 
 COMMON_WATCH_PATHS = [
 
@@ -101,6 +102,7 @@ def make_app(**kwargs):
 
     settings.update(userwebsite)
     COMMON_WATCH_PATHS.extend([
+        TMPL_PATH,
         os.path.join(settings['static_path'], 'scss'),
         os.path.join(settings['static_path'], 'js'),
         os.path.join(settings['static_path'], 'css')
