@@ -24,6 +24,7 @@ PIDNAME = f"{NAME.lower()}.pid"
 PID = os.path.join(PIDPATH, PIDNAME)
 STATIC_PATH = os.path.join(HERE, "static")
 TMPL_PATH = os.path.join(HERE, "html")
+ROUTE_PATH = os.path.join(HERE, "routes")
 
 COMMON_WATCH_PATHS = [
 
@@ -84,6 +85,7 @@ def find_website(path=os.path.join(HERE, "..", "website")):
         plog.LOG.debug(f"\t:: STATIC_PATH found {websitekw['STATIC_PATH']}")
         websitekw['WEBSITE'] = website.globals.WEBSITE
         websitekw["TMPL_PATH"] = os.path.join(website.globals.HERE, "html")
+        websitekw["ROUTE_PATH"] = website.globals.ROUTE_PATH
     except ImportError as iE:
         plog.LOG.error(str(iE))
         plog.LOG.error(traceback.format_exc())
@@ -108,6 +110,7 @@ def make_app(**kwargs):
     COMMON_WATCH_PATHS.extend([
         os.path.join(settings['static_path'], 'index.html'),
         TMPL_PATH,
+        ROUTE_PATH,
         os.path.join(settings['static_path'], 'scss'),
         os.path.join(settings['static_path'], 'js'),
         os.path.join(settings['static_path'], 'css')
@@ -134,11 +137,22 @@ def make_app(**kwargs):
     # compile sass
     compile_sass_files(settings['static_path'])
 
+    plog.LOG.debug(f'ROUTE PATH {settings.get("ROUTE_PATH")}')
+    plog.LOG.debug( f'Custom route dir: {userwebsite.get("ROUTE_PATH")}' )
+    routes = userwebsite.get("ROUTE_PATH", ROUTE_PATH)
+    mod = None
+    plog.LOG.debug(f'routes found: {routes}')
+    sys.path.insert(0, settings['ROUTE_PATH'])
+    foundroutes = []
+    for r in os.listdir(routes):
+        if r.endswith(".py") and not r == "__init__.py":
+            mod = importlib.import_module(r.replace(".py", ""), 'peonserver.routes' if not userwebsite.get("ROUTE_PATH") else 'website.routes')
+            foundroutes.extend(mod.ROUTES)
+
     return tornado.web.Application([
             (r"/", app.MainHandler),
-            (r"/templ", app.TemplateTestHandler),
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": settings['static_path']}),
-        ],
+        ] + foundroutes,
         template_path=userwebsite.get("TMPL_PATH", TMPL_PATH),
         debug=kwargs.get("debug", False),
         autoreload=autoreload,

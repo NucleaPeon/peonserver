@@ -11,12 +11,14 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 WEBSITE = "Custom Website Project"
 STATIC_PATH = os.path.join(HERE, "static")
 TMPL_PATH = os.path.join(HERE, "html")
+ROUTE_PATH = os.path.join(HERE, "routes")
 WATCH_PATHS = [
     os.path.join(STATIC_PATH, "scss"),
     os.path.join(STATIC_PATH, "css"),
     os.path.join(STATIC_PATH, "js"),
     os.path.join(STATIC_PATH, "index.html"),
     TMPL_PATH,
+    ROUTE_PATH
 ]
 """
 
@@ -30,6 +32,7 @@ def main():
         os.makedirs(path, exist_ok=True)
 
     os.makedirs(os.path.join(create_path, 'html'), exist_ok=True)
+    os.makedirs(os.path.join(create_path, 'routes'), exist_ok=True)
     initpath = os.path.join(create_path, "__init__.py")
     if not os.path.exists(initpath):
         with open(initpath, 'w') as f:
