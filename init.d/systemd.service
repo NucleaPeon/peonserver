@@ -1,0 +1,20 @@
+[Unit]
+Description=ROT13 demo service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+# Potentially change this to web or current user
+Environment="USER=root"
+# Keep / at end of path
+Environment="HOME=/"
+Type=simple
+Restart=always
+RestartSec=1
+User=$USER
+
+# ExecStart=cd $HOME$USER/ && python -m peonserver start
+ExecStart=python -m peonserver start
+
+[Install]
+WantedBy=multi-user.target

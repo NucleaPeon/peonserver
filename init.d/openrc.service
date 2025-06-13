@@ -1,0 +1,45 @@
+#!/sbin/openrc-run
+
+description="Python Tornado web server daemon"
+working_dir="/home/dev/Development/peonserver"
+# Change this user to your own user or web user
+user="dev"
+name="peonserver"
+# command="python -m ${name}"
+# Use something like this if you rely on user-based direnv setup:
+command=/home/$user/Development/peonserver/.direnv/python-3.11/bin/python -m ${name}
+command_wrap="su -l dev -c $command"
+pidfile="${RC_SVCNAME}.pid"
+pidpath="/run/"
+logpath="/var/log/${RC_SVCNAME}.log"
+command_args="--pid-path $pidpath --pid-file ${pidfile} --log-file $logpath"
+rc_need="loopback"
+
+depend() {
+    need $rc_need
+}
+
+start() {
+    ebegin "Starting ${name}"
+    su -l $user -c "$command_wrap start $command_args"
+    eend $?
+}
+
+stop()
+{
+    ebegin "Stopping ${name}"
+    su -l $user -c "$command_wrap stop"
+    eend $?
+}
+
+restart()
+{
+    ebegin "Restarting ${name}"
+    su -l $user -c "$command_wrap restart"
+    eend $?
+}
+
+status()
+{
+    su -l $user -c "$command_wrap status"
+}

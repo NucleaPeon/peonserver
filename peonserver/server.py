@@ -104,6 +104,7 @@ def make_app(**kwargs):
         "login_url": "/admin",
         "xsrf_cookies": True,
         "WEBSITE": "Default PeonServer Webpage",
+        "ROUTE_PATH": ROUTE_PATH,
     }
 
     settings.update(userwebsite)
@@ -182,7 +183,7 @@ async def run_tornado(debug=True, port=8085):
         plog.LOG.error(str(E))
         plog.LOG.error(traceback.format_exc())
 
-def main():
+def main(*args, **kwargs):
     parser = argparse.ArgumentParser(prog=f"{NAME.lower()}", description=f"{NAME} webserver host")
     parser.add_argument("--port", default=8085, help="Port to run on")
     parser.add_argument("--logfile", default=os.path.join(HERE, '..', f"{__name__}.log"),
@@ -214,9 +215,12 @@ def main():
             plog.set_logger(name=NAME)
             plog.LOG.info(f"Setting logfile to use stdout")
         daemon = ServerDaemon(
-            pidname=args.pid_name, pidpath=args.pid_path, silent=args.silent,
-            logfile=args.logfile, port=args.port, debug=args.debug)
-
+            pidname=args.pid_name,
+            pidpath=args.pid_path,
+            silent=args.silent,
+            logfile=args.logfile,
+            port=args.port,
+            debug=args.debug)
 
         if args.action == "start":
             asyncio.run(daemon.start())
