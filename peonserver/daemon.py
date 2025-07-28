@@ -36,7 +36,7 @@ class Daemon():
             - stdout: path or logfile if unset
             - stderr: path or logfile if unset
             - silent: default is False
-            - pidpath + pidfile: defaults to "/var/run/" + "wpcwebsite.pid"
+            - pidpath + pidfile: defaults to "/var/run/" + "{pidname}.pid"
         """
         self.log = kwargs.get("logger", logging.getLogger('daemon '))
         self.logfile = kwargs.get("logfile", DEFAULT_LOG_PATH)
