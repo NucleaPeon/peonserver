@@ -124,6 +124,9 @@ def make_app(**kwargs):
             plog.LOG.debug(f"Watching in directory path {_dir}")
 
             if not os.path.isfile(_dir):
+                if not os.path.exists(_dir):
+                    plog.LOG.warn(f"Watch directory {_dir} does not exist, skipping...")
+                    continue
                 files = os.listdir(_dir)
 
             else:
