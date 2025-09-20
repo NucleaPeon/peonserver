@@ -94,7 +94,7 @@ PeonServer is capable of developing webpages right off the bat, but it also allo
 
 Run the script after installation of peonserver to create the website:
 
-``./create-website``
+``create-website``
 
 and then modify the underlying ``website/static/...`` contents in the same way you would using the basic peonserver setup.
 The ``website`` directory is under ``.gitignore`` so it's something you should manage yourself. Turn it into its own git repo and then push and pull website-only changes there.
