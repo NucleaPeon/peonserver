@@ -144,12 +144,14 @@ def make_app(**kwargs):
     plog.LOG.debug(f'ROUTE PATH {settings.get("ROUTE_PATH")}')
     plog.LOG.debug( f'Custom route dir: {userwebsite.get("ROUTE_PATH")}' )
     routes = userwebsite.get("ROUTE_PATH", ROUTE_PATH)
+    print('routes', routes)
     mod = None
     plog.LOG.debug(f'routes found: {routes}')
     sys.path.insert(0, settings['ROUTE_PATH'])
     foundroutes = []
     for r in os.listdir(routes):
-        if r.endswith(".py") and not r == "__init__.py":
+        # Skip hidden files, require python modules and do not allow __init__ or __main__
+        if not r.startswith(".") and r.endswith(".py") and not r.startswith("__"):
             mod = importlib.import_module(r.replace(".py", ""), 'peonserver.routes' if not userwebsite.get("ROUTE_PATH") else 'website.routes')
             foundroutes.extend(mod.ROUTES)
 
