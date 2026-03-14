@@ -144,7 +144,6 @@ def make_app(**kwargs):
     plog.LOG.debug(f'ROUTE PATH {settings.get("ROUTE_PATH")}')
     plog.LOG.debug( f'Custom route dir: {userwebsite.get("ROUTE_PATH")}' )
     routes = userwebsite.get("ROUTE_PATH", ROUTE_PATH)
-    print('routes', routes)
     mod = None
     plog.LOG.debug(f'routes found: {routes}')
     sys.path.insert(0, settings['ROUTE_PATH'])
@@ -156,7 +155,6 @@ def make_app(**kwargs):
             mod = importlib.import_module(r.replace(".py", ""), 'peonserver.routes' if not userwebsite.get("ROUTE_PATH") else 'website.routes')
             foundroutes.extend(mod.ROUTES)
 
-    print("Returning application")
     return tornado.web.Application([
             (r"/", app.MainHandler),
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": settings['static_path']}),
@@ -173,7 +171,7 @@ class ServerDaemon(daemon.Daemon):
         self.log.info(f"Running {NAME}")
         try:
             app = make_app(debug=self.debug)
-            plog.LOG.info(f"App created and hosted on localhost:{self.port}, {'enabled' if debug else 'disabled'}")
+            plog.LOG.info(f"App created and hosted on localhost:{self.port}, Debugging {'enabled' if debug else 'disabled'}")
             app.listen(self.port)
             asyncio.run(await asyncio.Event().wait())
         except Exception as E:
