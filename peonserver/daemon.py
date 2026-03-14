@@ -8,6 +8,9 @@ import typing
 
 LOOP = asyncio.get_event_loop()
 DEFAULT_LOG_PATH = '/tmp/peonserver.dameon.log'
+PIDPATH = os.getcwd()
+PIDNAME = "daemon.pid"
+PID = os.path.join(PIDPATH, PIDNAME)
 
 """
 TODO:
@@ -45,7 +48,7 @@ class Daemon():
         self.stderr = kwargs.get("stderr", self.logfile)
         self.silent = kwargs.get("silent", False)
         self.pidfile = os.path.join(kwargs.get("pidpath", f"{__name__}.pid"),
-                                    kwargs.get("pidname", "/var/run/"))
+                                    kwargs.get("pidname", os.path.join(PIDPATH, PIDNAME)))
         self.debug = kwargs.get("debug", False)
         self.port = kwargs.get("port", 8085)
         logging.basicConfig(level=kwargs.get("loglevel", logging.DEBUG),
@@ -203,9 +206,7 @@ class TestDaemon(Daemon):
         await super().run()
         await self.sleep()
 
-PIDPATH = os.getcwd()
-PIDNAME = "daemon.pid"
-PID = os.path.join(PIDPATH, PIDNAME)
+
 
 def stop():
     daemon = TestDaemon(pidname=PIDNAME, pidpath=PIDPATH, silent=True)

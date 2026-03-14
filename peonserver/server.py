@@ -150,11 +150,13 @@ def make_app(**kwargs):
     sys.path.insert(0, settings['ROUTE_PATH'])
     foundroutes = []
     for r in os.listdir(routes):
+        print(r)
         # Skip hidden files, require python modules and do not allow __init__ or __main__
         if not r.startswith(".") and r.endswith(".py") and not r.startswith("__"):
             mod = importlib.import_module(r.replace(".py", ""), 'peonserver.routes' if not userwebsite.get("ROUTE_PATH") else 'website.routes')
             foundroutes.extend(mod.ROUTES)
 
+    print("Returning application")
     return tornado.web.Application([
             (r"/", app.MainHandler),
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": settings['static_path']}),
@@ -167,7 +169,7 @@ def make_app(**kwargs):
 
 class ServerDaemon(daemon.Daemon):
 
-    async def run(self):
+    async def run(self, debug=False):
         self.log.info(f"Running {NAME}")
         try:
             app = make_app(debug=self.debug)
