@@ -68,8 +68,8 @@ def find_website(path=os.path.join(HERE, "..", "website")):
         plog.LOG.info("Use `create-website` script to generate a templated website structure")
         return websitekw
 
-    plog.LOG.info("Found user website, adding to path.")
-    sys.path.insert(0, path)
+    plog.LOG.info(f"Found user website at {path}, adding to sys.path.")
+    sys.path.insert(0, os.path.join(path, ".."))
     try:
         import website.globals
         #LEFT OFF FIXME: If attrs not found, ignore but warn unless critical
@@ -185,9 +185,9 @@ class ServerDaemon(daemon.Daemon):
             plog.LOG.error(str(E))
             plog.LOG.error(traceback.format_exc())
 
-async def run_tornado(debug=True, port=8085):
+async def run_tornado(debug=True, port=8085, website=None):
     try:
-        app = make_app(debug=debug)
+        app = make_app(debug=debug, website=website)
         plog.LOG.info(f"App created and hosted on localhost:{port}, {'enabled' if debug else 'disabled'}")
         app.listen(port)
         asyncio.run(await asyncio.Event().wait())
