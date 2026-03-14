@@ -63,8 +63,8 @@ def get_cookie_key(cookiefile=os.path.join(HERE, "cookie.secret"), keylength=80)
 
 def find_website(path=os.path.join(HERE, "..", "website")):
     websitekw = {}
-    if not os.path.exists(path):
-        plog.LOG.info(f"Optional user content website path `{os.path.normpath(path)}` does not exist.")
+    if path is None or not os.path.exists(path):
+        plog.LOG.info(f"Optional user content website path `{'None' if path is None else os.path.normpath(path)}` does not exist.")
         plog.LOG.info("Use `create-website` script to generate a templated website structure")
         return websitekw
 
@@ -94,10 +94,14 @@ def find_website(path=os.path.join(HERE, "..", "website")):
 
     return websitekw
 
-def make_app(**kwargs):
+def make_app(debug=False, **kwargs):
+    plog.LOG.setLevel(logging.DEBUG if debug else logging.INFO)
+    print(kwargs)
+    plog.LOG.info(debug)
+
     autoreload = kwargs.get("autoreload", kwargs.get("debug", False) )
-    plog.LOG.setLevel(logging.DEBUG if kwargs.get("debug") else logging.INFO)
-    userwebsite = find_website()
+    website = kwargs.get("website")
+    userwebsite = find_website(path=website)
     settings = {
         "static_path": userwebsite.get("STATIC_PATH") or STATIC_PATH,
         "cookie_secret": get_cookie_key(),
@@ -167,11 +171,14 @@ def make_app(**kwargs):
 
 class ServerDaemon(daemon.Daemon):
 
-    async def run(self, debug=False):
+    website = None
+    debug = False
+
+    async def run(self):
         self.log.info(f"Running {NAME}")
         try:
-            app = make_app(debug=self.debug)
-            plog.LOG.info(f"App created and hosted on localhost:{self.port}, Debugging {'enabled' if debug else 'disabled'}")
+            app = make_app(website=self.website)
+            plog.LOG.info(f"App created and hosted on localhost:{self.port}, Debugging {'enabled' if self.debug else 'disabled'}")
             app.listen(self.port)
             asyncio.run(await asyncio.Event().wait())
         except Exception as E:
@@ -189,6 +196,11 @@ async def run_tornado(debug=True, port=8085):
         plog.LOG.error(traceback.format_exc())
 
 def main(*args, **kwargs):
+    p = parser()
+    parser_args = p.parse_args()
+    run_daemon(parser_args, kwargs)
+
+def parser():
     parser = argparse.ArgumentParser(prog=f"{NAME.lower()}", description=f"{NAME} webserver host")
     parser.add_argument("--port", default=8085, help="Port to run on")
     parser.add_argument("--logfile", default=os.path.join(HERE, '..', f"{__name__}.log"),
@@ -205,38 +217,42 @@ def main(*args, **kwargs):
     parser_stop = subparsers.add_parser('stop', help=f"Stop the {NAME.lower()} daemon")
     parser_restart = subparsers.add_parser('restart', help=f"Restart the {NAME.lower()} daemon")
     parser_status = subparsers.add_parser('status', help=f"Print out {NAME.lower()} daemon status")
+    return parser
 
-    args = parser.parse_args()
+
+def run_daemon(parser_args, **kwargs):
     enable_pretty_logging()
-    if args.no_daemon:
+    if parser_args.no_daemon:
         plog.set_logger(name=NAME)
         plog.LOG.info(f"Setting logfile to use stdout")
         asyncio.run(run_tornado())
     else:
-        if args.logfile:
-            plog.set_logger(args.logfile, name=NAME)
-            plog.LOG.info(f"Setting logfile to {args.logfile}")
+        if parser_args.logfile:
+            plog.set_logger(parser_args.logfile, name=NAME)
+            plog.LOG.info(f"Setting logfile to {parser_args.logfile}")
         else:
             plog.set_logger(name=NAME)
             plog.LOG.info(f"Setting logfile to use stdout")
         daemon = ServerDaemon(
-            pidname=args.pid_name,
-            pidpath=args.pid_path,
-            silent=args.silent,
-            logfile=args.logfile,
-            port=args.port,
-            debug=args.debug)
+            pidname=parser_args.pid_name,
+            pidpath=parser_args.pid_path,
+            silent=parser_args.silent,
+            logfile=parser_args.logfile,
+            port=parser_args.port)
+        daemon.website = kwargs.get("website")
+        daemon.debug = True
+        plog.LOG.info(f"Setting debug to {parser_args.debug}")
 
-        if args.action == "start":
+        if parser_args.action == "start":
             asyncio.run(daemon.start())
 
-        elif args.action == "stop":
+        elif parser_args.action == "stop":
             asyncio.run(daemon.stop())
 
-        elif args.action == "restart":
+        elif parser_args.action == "restart":
             asyncio.run(daemon.restart())
 
-        elif args.action == "status":
+        elif parser_args.action == "status":
             asyncio.run(daemon.status())
 
 if __name__ == "__main__":

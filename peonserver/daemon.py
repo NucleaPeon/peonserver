@@ -30,6 +30,7 @@ class Daemon():
 
     Set stderr to /dev/null (has to be a file object)
     """
+
     def __init__(self, **kwargs):
         """
         :Parameters:
@@ -49,7 +50,6 @@ class Daemon():
         self.silent = kwargs.get("silent", False)
         self.pidfile = os.path.join(kwargs.get("pidpath", f"{__name__}.pid"),
                                     kwargs.get("pidname", os.path.join(PIDPATH, PIDNAME)))
-        self.debug = kwargs.get("debug", False)
         self.port = kwargs.get("port", 8085)
         logging.basicConfig(level=kwargs.get("loglevel", logging.DEBUG),
             filename=self.logfile,
@@ -165,10 +165,9 @@ class Daemon():
         try:
             while True:
                 os.kill(pid, SIGTERM)
-                time.sleep(0.1)
+                time.sleep(0.2)
         except OSError as osE:
             err = str(osE)
-            self.log.error(str(osE))
             if err.find("No such process") > 0:
                 if os.path.exists(self.pidfile):
                     os.remove(self.pidfile)
