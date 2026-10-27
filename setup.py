@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='peonserver',
-    version='1.2.1',
+    version='1.2.2',
     packages=find_packages(),
     scripts=[],
     entry_points={
