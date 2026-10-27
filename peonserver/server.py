@@ -198,7 +198,8 @@ async def run_tornado(debug=True, port=8085, website=None):
 def main(*args, **kwargs):
     p = parser()
     parser_args = p.parse_args()
-    run_daemon(parser_args, kwargs)
+    print(parser_args, kwargs)
+    run_daemon(parser_args, **kwargs)
 
 def parser():
     parser = argparse.ArgumentParser(prog=f"{NAME.lower()}", description=f"{NAME} webserver host")
