@@ -30,7 +30,7 @@ WATCH_PATHS = [
 
 def main():
     parser = argparse.ArgumentParser(prog="create-website", description="Generates a website template at a specified location")
-    parser.add_argument("path", default=os.path.normpath(os.path.join(HERE, "..", "website")), help="Location to write the website data, defaults to the server directory.")
+    parser.add_argument("path", nargs="?", default=os.path.normpath(os.path.join(HERE, "..", "website")), help="Location to write the website data, defaults to the server directory.")
     parser.add_argument("-t", "--title",
                         default="Custom Website Project",
                         help="Window Title of the Webpage")
