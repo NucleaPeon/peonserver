@@ -13,3 +13,4 @@ peonserver/*.secret
 website/*
 # Since sass/scss is compiled into css, we probably don't want to add files from there.
 peonserver/static/css/*
+.website

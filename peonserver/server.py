@@ -14,7 +14,7 @@ import sass
 
 from peonserver import app
 from peonserver import daemon
-from peonserver import HERE
+from peonserver import HERE, WEBFILE
 import peonserver.log as plog
 
 NAME = "PeonServer"
@@ -63,10 +63,21 @@ def get_cookie_key(cookiefile=os.path.join(HERE, "cookie.secret"), keylength=80)
 
 def find_website(path=os.path.join(HERE, "..", "website")):
     websitekw = {}
-    if path is None or not os.path.exists(path):
+    webpathfile = os.path.join(HERE, WEBFILE)
+    webpath = None
+    if os.path.exists(webpathfile):
+        with open(webpathfile, 'r') as f:
+            webpath = f.read()
+            if not webpath or not os.path.exists(os.path.join(HERE, webpath)):
+                webpath = None
+
+    if webpath is None and (path is None or not os.path.exists(path)):
         plog.LOG.info(f"Optional user content website path `{'None' if path is None else os.path.normpath(path)}` does not exist.")
         plog.LOG.info("Use `create-website` script to generate a templated website structure")
         return websitekw
+
+    if not webpath is None:
+        path = webpath
 
     plog.LOG.info(f"Found user website at {path}, adding to sys.path.")
     sys.path.insert(0, os.path.join(path, ".."))

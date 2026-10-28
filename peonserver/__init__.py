@@ -3,9 +3,10 @@ from formencode import validators, Schema, api
 import functools
 
 
-__all__ = ["HERE", "Validator", "EmailValidator"]
+__all__ = ["HERE", "Validator", "EmailValidator", "WEBFILE"]
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+WEBFILE = ".website"
 
 ### DECORATORS ###
 

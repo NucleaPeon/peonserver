@@ -3,7 +3,7 @@
 import os
 import shutil
 import argparse
-from peonserver import HERE
+from peonserver import HERE, WEBFILE
 
 def global_default_code(parsed):
     """
@@ -65,6 +65,9 @@ def main():
     if not os.path.exists(htmlfile):
         shutil.copyfile(os.path.join(HERE, "static", "index.html"), htmlfile)
         print(":: Copied default index.html file to new website")
+
+    with open(os.path.join(HERE, WEBFILE), 'w') as f:
+        f.write(os.path.abspath(path))
 
 if __name__ == "__main__":
     main()
