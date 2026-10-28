@@ -178,7 +178,7 @@ class ServerDaemon(daemon.Daemon):
         self.log.info(f"Running {NAME}")
         try:
             app = make_app(website=self.website)
-            plog.LOG.info(f"App created and hosted on localhost:{self.port}, Debugging {'enabled' if self.debug else 'disabled'}")
+            plog.LOG.info(f"App created and hosted on http://localhost:{self.port}, Debugging {'enabled' if self.debug else 'disabled'}")
             app.listen(self.port)
             asyncio.run(await asyncio.Event().wait())
         except Exception as E:
@@ -188,7 +188,7 @@ class ServerDaemon(daemon.Daemon):
 async def run_tornado(debug=True, port=8085, website=None):
     try:
         app = make_app(debug=debug, website=website)
-        plog.LOG.info(f"App created and hosted on localhost:{port}, {'enabled' if debug else 'disabled'}")
+        plog.LOG.info(f"App created and hosted on http://localhost:{port}, {'enabled' if debug else 'disabled'}")
         app.listen(port)
         asyncio.run(await asyncio.Event().wait())
     except Exception as E:
